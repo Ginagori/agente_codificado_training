@@ -2,6 +2,160 @@
 
 Este archivo proporciona una guía integral para Claude Code cuando se trabaja con código Python en este repositorio.
 
+---
+
+## 🤖 Sobre Este Proyecto
+
+Este es un **Pydantic AI Agent** avanzado que combina múltiples capacidades de IA:
+
+- **Agentic RAG**: Consulta documentos con inteligencia contextual
+- **Memoria a Largo Plazo**: El agente recuerda conversaciones previas (usando mem0)
+- **Búsqueda Web**: Búsqueda en internet usando Brave API
+- **Análisis de Imágenes**: Analiza imágenes con modelos de visión
+- **Ejecución de Código**: Genera y ejecuta código Python de forma segura
+- **Multi-LLM**: Compatible con OpenAI, OpenRouter, o Ollama local
+
+### Configuración Actual del Proyecto
+
+- **Framework**: Pydantic AI
+- **LLM Provider**: OpenAI (gpt-4o-mini)
+- **Embeddings**: text-embedding-3-small (1536 dimensiones)
+- **Base de Datos**: Supabase Cloud (PostgreSQL + pgvector)
+- **Búsqueda Web**: Brave Search API
+- **UI**: Streamlit
+
+### Entornos Virtuales
+
+Este proyecto usa **DOS entornos virtuales separados**:
+
+1. **`venv/`** (raíz): Para el agente principal
+2. **`RAG_Pipeline/venv/`**: Para el pipeline de procesamiento de documentos
+
+**IMPORTANTE**: Activar el entorno correcto según la tarea:
+```bash
+# Para trabajar con el agente principal:
+cd 4_Pydantic_AI_Agent
+venv\Scripts\activate
+
+# Para trabajar con RAG Pipeline:
+cd 4_Pydantic_AI_Agent\RAG_Pipeline
+venv\Scripts\activate
+```
+
+### Arquitectura Real del Proyecto
+
+```
+4_Pydantic_AI_Agent/
+├── .env                        # Configuración (NO en Git)
+├── CLAUDE.md                   # Esta guía
+├── PROGRESO.md                 # Seguimiento del proyecto
+├── README.md                   # Documentación principal
+├── requirements.txt            # Dependencias del agente
+├── venv/                       # Entorno virtual del agente
+│
+├── agent.py                    # Implementación principal del agente Pydantic AI
+├── clients.py                  # Configuración de clientes (LLM, DB, memoria)
+├── prompt.py                   # Template del sistema de prompts
+├── tools.py                    # Implementación de herramientas del agente
+├── streamlit_ui.py            # Interfaz de usuario básica
+│
+├── RAG_Pipeline/               # Pipeline de procesamiento de documentos
+│   ├── requirements.txt        # Dependencias del pipeline
+│   ├── venv/                   # Entorno virtual del pipeline
+│   ├── common/                 # Funcionalidad común RAG
+│   │   ├── db_handler.py      # Operaciones de BD para RAG
+│   │   └── text_processor.py  # Procesamiento de texto para vector DB
+│   ├── Google_Drive/          # Pipeline de Google Drive
+│   │   ├── main.py
+│   │   ├── drive_watcher.py
+│   │   └── config.json
+│   └── Local_Files/           # Pipeline de archivos locales
+│       ├── main.py
+│       ├── file_watcher.py
+│       └── config.json
+│
+├── sql/                        # Scripts SQL para Supabase
+│   ├── documents.sql
+│   ├── document_metadata.sql
+│   ├── document_rows.sql
+│   └── execute_sql_rpc.sql
+│
+└── tests/                      # Tests del proyecto
+```
+
+### Comandos Específicos del Proyecto
+
+#### Instalación Inicial (Pendiente)
+```bash
+# 1. Instalar dependencias del agente
+cd 4_Pydantic_AI_Agent
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+# 2. Instalar dependencias del RAG Pipeline
+cd RAG_Pipeline
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+#### Ejecutar el Agente
+```bash
+cd 4_Pydantic_AI_Agent
+venv\Scripts\activate
+streamlit run streamlit_ui.py
+```
+
+#### Ejecutar RAG Pipeline - Archivos Locales
+```bash
+cd 4_Pydantic_AI_Agent\RAG_Pipeline
+venv\Scripts\activate
+python Local_Files/main.py
+```
+
+#### Ejecutar RAG Pipeline - Google Drive
+```bash
+cd 4_Pydantic_AI_Agent\RAG_Pipeline
+venv\Scripts\activate
+python Google_Drive/main.py
+```
+
+### Variables de Entorno Requeridas
+
+El archivo `.env` debe contener (ver `.env.example`):
+
+```bash
+# LLM Configuration
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=tu-api-key
+LLM_CHOICE=gpt-4o-mini
+VISION_LLM_CHOICE=gpt-4o-mini
+
+# Embeddings
+EMBEDDING_PROVIDER=openai
+EMBEDDING_BASE_URL=https://api.openai.com/v1
+EMBEDDING_API_KEY=tu-api-key
+EMBEDDING_MODEL_CHOICE=text-embedding-3-small
+
+# Database (Supabase)
+DATABASE_URL=postgresql://...
+SUPABASE_URL=https://....supabase.co
+SUPABASE_SERVICE_KEY=...
+
+# Web Search
+BRAVE_API_KEY=tu-brave-api-key
+```
+
+### Seguimiento del Proyecto
+
+- **Ver progreso actual**: Lee `PROGRESO.md`
+- **Ver documentación principal**: Lee `README.md`
+- **Esta guía**: Mejores prácticas de desarrollo
+
+---
+
 ## Filosofía Central de Desarrollo
 
 ### KISS (Keep It Simple, Stupid)
@@ -28,55 +182,28 @@ Evita construir funcionalidad basándote en especulaciones. Implementa caracter�
 - **Las clases deben tener menos de 100 líneas** y representar un solo concepto o entidad.
 - **Organiza el código en módulos claramente separados**, agrupados por característica o responsabilidad.
 - **La longitud de línea debe ser máximo 100 caracteres** regla de ruff en pyproject.toml
-- **Usa venv_linux** (el entorno virtual) al ejecutar comandos Python, incluyendo para pruebas unitarias.
+- **IMPORTANTE**: Este proyecto usa **DOS entornos virtuales separados**:
+  - `venv/` en la raíz para el agente principal
+  - `RAG_Pipeline/venv/` para el pipeline RAG
+  - Activar el correcto según la tarea
 
-### Arquitectura del Proyecto
+### Organización de Archivos del Proyecto
 
-Sigue una estricta arquitectura de corte vertical con pruebas que viven junto al código que prueban:
+Este proyecto está organizado en dos componentes principales:
 
-```
-src/project/
-    __init__.py
-    main.py
-    tests/
-        test_main.py
-    conftest.py
+1. **Agente Principal** (raíz del proyecto):
+   - `agent.py`: Lógica principal del agente con Pydantic AI
+   - `clients.py`: Configuración de clientes (LLM, DB, memoria)
+   - `tools.py`: Herramientas disponibles para el agente
+   - `prompt.py`: Sistema de prompts
+   - `streamlit_ui.py`: Interfaz de usuario
 
-    # Módulos centrales
-    database/
-        __init__.py
-        connection.py
-        models.py
-        tests/
-            test_connection.py
-            test_models.py
+2. **RAG Pipeline** (carpeta `RAG_Pipeline/`):
+   - `common/`: Funciones compartidas para procesamiento de documentos
+   - `Local_Files/`: Pipeline para archivos locales
+   - `Google_Drive/`: Pipeline para Google Drive
 
-    auth/
-        __init__.py
-        authentication.py
-        authorization.py
-        tests/
-            test_authentication.py
-            test_authorization.py
-
-    # Cortes de características
-    features/
-        user_management/
-            __init__.py
-            handlers.py
-            validators.py
-            tests/
-                test_handlers.py
-                test_validators.py
-
-        payment_processing/
-            __init__.py
-            processor.py
-            gateway.py
-            tests/
-                test_processor.py
-                test_gateway.py
-```
+Ver la arquitectura completa en la sección superior de este documento.
 
 ## 🛠️ Entorno de Desarrollo
 
