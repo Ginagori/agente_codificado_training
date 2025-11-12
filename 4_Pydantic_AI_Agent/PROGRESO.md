@@ -1,6 +1,6 @@
 # 📊 Progreso del Proyecto - Pydantic AI Agent
 
-## 🗓️ Última Sesión: 11 de Noviembre de 2024
+## 🗓️ Última Sesión: 12 de Noviembre de 2024
 
 ---
 
@@ -64,35 +64,81 @@
   - Tamaño aproximado: ~150-200 MB
 - ✅ Verificación exitosa de paquetes principales
 
+### 6. FASE 2: Verificación de Supabase e Integración (12 Nov 2024)
+
+#### ✅ Análisis de Estructura de Datos
+- ✅ Verificado esquema de tablas en Supabase
+  - Tabla `documents`: Idéntica a la esperada (id, content, metadata, embedding)
+  - Tabla `document_metadata`: Idéntica (id, title, url, created_at, schema)
+  - Tabla `document_rows`: Idéntica (id, dataset_id, row_data)
+- ✅ Funciones RPC existentes confirmadas:
+  - `match_documents` - Para búsqueda vectorial RAG
+  - `execute_custom_sql` - Para consultas SQL en datos tabulares
+
+#### ✅ Análisis del Workflow n8n Existente
+- ✅ Workflow "RAG AGENTICO NIVANTA" analizado (68 nodos)
+- ✅ Identificadas diferencias en estructura de metadata:
+  - Campo `file_id`, `file_title`, `file_url` - ✅ Compatible
+  - Campo `blobType` en lugar de `mime_type` - ⚠️ Diferente pero no crítico
+  - Campo `loc` (location info) - Adicional, no usado por código Python
+  - Campo `source` - Adicional, no usado por código Python
+  - Campo `file_contents` (base64 para imágenes) - ❌ NO existe (limitación)
+
+#### ✅ Pruebas del Agente Python con Streamlit
+Ejecutado exitosamente: `streamlit run streamlit_ui.py`
+
+**Herramientas Probadas:**
+
+| Herramienta | Estado | Resultado |
+|-------------|--------|-----------|
+| `retrieve_relevant_documents` | ✅ Funciona | Búsqueda RAG en documentos |
+| `list_documents` | ✅ Funciona | Lista todos los documentos con metadata |
+| `get_document_content` | ✅ Funciona | Obtiene contenido completo de documentos |
+| `execute_sql_query` | ✅ Funciona | Consultas SQL en datos tabulares (CSV/XLSX) |
+| `web_search` | ✅ Funciona | Búsqueda web con Brave API |
+| `execute_code` | ✅ Funciona | Ejecución de código Python |
+| `image_analysis` | ⚠️ Limitado | Trae URL pero no analiza contenido (falta `file_contents`) |
+
+#### ✅ Documentación de Referencia
+- ✅ Workflow n8n guardado en `n8n_reference/mi_agente_n8n`
+- ✅ Análisis completo del workflow documentado
+
 ---
 
 ## 📋 Pendiente para la Próxima Sesión
 
-### FASE 2: Configurar Base de Datos en Supabase
+### FASE 3: Adaptar Análisis de Imágenes (Opcional)
 
-#### Paso 3: Ejecutar scripts SQL en Supabase
-Ir a: https://supabase.com/dashboard (SQL Editor)
+#### Problema Identificado
+La herramienta `image_analysis_tool` en `tools.py` busca el campo `file_contents` (base64) en metadata, pero tu workflow n8n no lo incluye.
 
-Ejecutar en orden:
-1. `sql/documents.sql` - Crear tabla de documentos con embeddings
-2. `sql/document_metadata.sql` - Crear tabla de metadatos
-3. `sql/document_rows.sql` - Crear tabla de datos tabulares
-4. `sql/execute_sql_rpc.sql` - Crear función RPC para consultas SQL
+#### Opciones para Solucionar:
 
-### FASE 3: Configurar RAG Pipeline (Opcional)
+**Opción A (Recomendada)**: Modificar `tools.py` para descargar imágenes desde URL
+- Adaptar función `image_analysis_tool()` (línea ~275-315)
+- Descargar imagen desde `file_url` de Google Drive
+- Convertir a base64 para análisis con vision LLM
 
-#### Paso 4: Configurar pipeline de archivos locales
-- Editar `RAG_Pipeline/Local_Files/config.json`
-- Especificar directorio a monitorear
+**Opción B**: Actualizar workflow n8n para agregar `file_contents`
+- Modificar nodo de procesamiento de imágenes en n8n
+- Agregar conversión a base64 en metadata
+- Requiere cambios en workflow existente
 
-### FASE 4: Ejecutar el Agente
+**Opción C**: Documentar limitación y deshabilitar temporalmente
+- Agregar mensaje de error claro
+- Usar solo para documentos de texto/tabulares por ahora
 
-#### Paso 5: Probar el agente con Streamlit
-```bash
-cd C:\Users\USUARIO\Proyectos\AgentesDeIA\4_Pydantic_AI_Agent
-venv\Scripts\activate
-streamlit run streamlit_ui.py
-```
+### FASE 4: Configurar RAG Pipeline (Opcional)
+
+- Editar `RAG_Pipeline/Local_Files/config.json` para archivos locales
+- O usar workflow n8n existente que ya funciona
+
+### FASE 5: Producción y Mejoras
+
+- Decidir arquitectura final (n8n vs Python vs híbrido)
+- Optimizaciones de rendimiento
+- Mejoras en prompts del agente
+- Tests automatizados
 
 ---
 
@@ -163,5 +209,5 @@ streamlit run streamlit_ui.py
 
 ---
 
-**Última actualización**: 11 de Noviembre de 2024, 22:00 hrs
-**Estado**: ✅ FASE 1 COMPLETADA - Listo para FASE 2 (Configuración de Supabase)
+**Última actualización**: 12 de Noviembre de 2024, 22:00 hrs
+**Estado**: ✅ FASE 2 COMPLETADA - Agente Python funcionando (6/7 herramientas operativas)

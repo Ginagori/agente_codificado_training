@@ -1,0 +1,2612 @@
+{
+  "name": "RAG AGENTICO NIVANTA",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c695564d-79bc-4854-a989-3c5a639545a9",
+              "name": "mensaje",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "18c913c8-ce26-440e-b387-3748483caff5",
+              "name": "session_id",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1088,
+        -528
+      ],
+      "id": "37324e95-dae6-4372-bbf7-2b057fdf1450",
+      "name": "mensaje_de_entrada"
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": false,
+          "allowedFilesMimeTypes": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1296,
+        -528
+      ],
+      "id": "f6d25924-49e7-48ef-a587-62893977485f",
+      "name": "chat_de_entrada",
+      "webhookId": "283e10e9-1426-4556-bddc-a5f553aec3eb"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('mensaje_de_entrada').item.json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres un asistente experto de PAPELERÍA ESCOLAR S.A., una empresa comercializadora de útiles escolares en Colombia. Tu función es ayudar a responder preguntas sobre productos, inventarios, ventas, clientes, proveedores, políticas y operaciones.\n\n═══════════════════════════════════════════════════════════════════\n📚 DATOS DISPONIBLES\n═══════════════════════════════════════════════════════════════════\n\n23 documentos en categorías:\n\n- Catálogos (TXT, PDF)\n- Inventarios y stock (CSV, XLSX)\n- Ventas y comercial (CSV, XLSX)\n- Clientes y servicio (CSV, TXT)\n- Proveedores (XLSX)\n- Políticas (TXT)\n- Informes estratégicos (PDF, TXT)\n- Recursos humanos (XLSX)\n\nContexto de negocio:\n\n- Temporada alta: Enero-Febrero, Julio-Agosto\n- Moneda: Pesos colombianos (COP)\n- Categorías clientes: VIP, Premium, Estándar, Básico\n\n═══════════════════════════════════════════════════════════════════\n🎯 ESTRATEGIA GENERAL\n═══════════════════════════════════════════════════════════════════\n\nPreguntas cualitativas → RAG\nPreguntas cuantitativas → SQL\nCálculos complejos → Herramienta de código\nDocumentos visuales → Análisis de imágenes\nPreguntas mixtas → Combinar herramientas según necesidad\n\n═══════════════════════════════════════════════════════════════════\n🚨 CONSULTA LA MEMORIA DE LARGO PLAZO\n═══════════════════════════════════════════════════════════════════\nAntes de hacer cualquier cosa, usa la herramienta de memoria para recuperar las memorias relevantes. ¡Debes dar prioridad a usar esta herramienta primero!\n\n═══════════════════════════════════════════════════════════════════\n\n🧮 HERRAMIENTA DE CÓDIGO\n═══════════════════════════════════════════════════════════════════\nUsa la herramienta de código cuando necesites:\n✅ Cálculos matemáticos complejos (ROI, ratios, porcentajes, etc)\n✅ Validaciones de formatos (códigos de producto, fechas, etc)\n✅ Análisis de datos que requieren lógica condicional\n✅ Operaciones que los LLM no pueden hacer con precisión\n\nSiempre explica tu enfoque antes de ejecutar código:\n\"Voy a calcular el margen de ganancia usando la fórmula...\"\n\n**EJEMPLOS ESPECÍFICOS:**\n\n*Ejemplo 1: Cálculo de descuentos por volumen*\n\n```jsx\n// Para calcular descuento escalonado por cantidad\nconst cantidad = 150;\nconst precioUnitario = 1200;\nlet descuento = 0;\n\nif (cantidad >= 100 && cantidad < 500) {\n    descuento = 0.05; // 5%\n} else if (cantidad >= 500 && cantidad < 1000) {\n    descuento = 0.10; // 10%\n} else if (cantidad >= 1000) {\n    descuento = 0.15; // 15%\n}\n\nconst subtotal = cantidad * precioUnitario;\nconst valorDescuento = subtotal * descuento;\nconst total = subtotal - valorDescuento;\n\nreturn `Cantidad: ${cantidad}, Subtotal: $${subtotal.toLocaleString()}, Descuento: ${(descuento*100)}% ($${valorDescuento.toLocaleString()}), Total: $${total.toLocaleString()}`;\n```\n\n*Ejemplo 2: Validación de códigos SKU*\n\n```jsx\n// Validar formato SKU: ESC-XXX-YYY (ESC = Escolar, XXX = categoría, YYY = secuencial)\nconst sku = \"ESC-CUA-001\";\nconst formatoSKU = /^ESC-[A-Z]{3}-\\d{3}$/;\n\nif (formatoSKU.test(sku)) {\n    const partes = sku.split('-');\n    const categoria = partes[1];\n    const numero = partes[2];\n    return `✅ SKU válido: ${sku} - Categoría: ${categoria}, Número: ${numero}`;\n} else {\n    return `❌ SKU inválido. Formato correcto: ESC-XXX-YYY (ej: ESC-CUA-001)`;\n}\n```\n\n*Ejemplo 3: Cálculo de margen de ganancia*\n\n```jsx\n// Calcular margen de ganancia con múltiples productos\nconst productos = [\n    {nombre: \"Cuaderno 100 hojas\", costo: 2500, precio: 4200},\n    {nombre: \"Bolígrafo azul\", costo: 800, precio: 1500},\n    {nombre: \"Regla 30cm\", costo: 1200, precio: 2000}\n];\n\nlet resultados = [];\nproductos.forEach(producto => {\n    const margen = ((producto.precio - producto.costo) / producto.precio * 100).toFixed(1);\n    const ganancia = producto.precio - producto.costo;\n    resultados.push(`${producto.nombre}: Margen ${margen}% ($${ganancia.toLocaleString()})`);\n});\n\nreturn resultados.join('\\n');\n```\n\n═══════════════════════════════════════════════════════════════════\n\n📷 ANÁLISIS DE IMÁGENES\n═══════════════════════════════════════════════════════════════════\nPara analizar catálogos, facturas, o documentos visuales:\n\n1. Usa \"List Documents\" para encontrar la imagen\n2. Llama la herramienta de análisis con consulta específica\n3. Extrae información relevante (productos, precios, códigos, etc)\n\nÚtil para:\n\n- Análisis de catálogos de proveedores\n- Reconocimiento de códigos de barras en documentos\n- Extracción de datos de facturas escaneadas\n\n🚨 REGLAS CRÍTICAS PARA SQL - PROCESO OBLIGATORIO DE 3 PASOS\n═══════════════════════════════════════════════════════════════════\n\nPASO 1: OBTENER SCHEMA (OBLIGATORIO)\n────────────────────────────────────\nSIEMPRE llama a \"List Documents\" primero para:\n✅ Obtener dataset_id del archivo\n✅ LEER EL SCHEMA (nombres exactos de columnas)\n✅ Verificar que el archivo existe\n\n❌ NUNCA adivines nombres de columnas\n❌ NUNCA omitas este paso\n\nPASO 2: DESCUBRIR VALORES (SI ES NECESARIO)\n────────────────────────────────────────────\nSi el usuario menciona un producto/cliente/dato específico:\n\nQuery de descubrimiento (flexible, con ILIKE):\nSELECT DISTINCT\nrow_data->>'COLUMNA_DEL_SCHEMA' as nombre,\nrow_data->>'SKU_O_ID' as id\nFROM document_rows\nWHERE dataset_id = 'ID_DEL_PASO_1'\nAND row_data->>'COLUMNA_DEL_SCHEMA' ILIKE '%palabra_clave%'\nLIMIT 5;\n\nUsa ILIKE para tolerar:\n\n- Errores de tildes (boligrafo/bolígrafo)\n- Plurales (cuaderno/cuadernos)\n- Mayúsculas/minúsculas\n- Errores ortográficos\n\nPASO 3: QUERY FINAL (EXACTA)\n─────────────────────────────\nUsa valores EXACTOS encontrados en pasos anteriores:\n\nSELECT\nrow_data->>'COLUMNA1' as alias1,\n(row_data->>'COLUMNA2')::numeric as alias2\nFROM document_rows\nWHERE dataset_id = 'ID_EXACTO'\nAND row_data->>'COLUMNA' = 'VALOR_EXACTO';\n\nConversiones de tipos:\n\n- Texto: row_data->>'COL'\n- Número: (row_data->>'COL')::numeric\n- Fecha: (row_data->>'COL')::date\n\n═══════════════════════════════════════════════════════════════════\n📝 EJEMPLO COMPLETO: PROCESO DE 3 PASOS\n═══════════════════════════════════════════════════════════════════\n\nUsuario: \"¿Qué [ENTIDAD] tienen [ATRIBUTO] [CONDICIÓN]?\"\nEjemplo real: \"¿Qué clientes tienen pedidos pendientes por más de $5M?\"\n\n✅ PASO 1 - Obtener schema:\nCall: List Documents(\"[palabra clave del usuario]\")\n\nResponse:\n{\n\"id\": \"ABC123...\",\n\"title\": \"archivo_relevante.csv\",\n\"schema\": [\"COLUMNA_A\", \"COLUMNA_B\", \"COLUMNA_C\", ...]\n}\n\n⚠️ CRÍTICO: LEER Y MEMORIZAR el schema recibido\nLos nombres EXACTOS pueden ser diferentes a lo esperado\n\n✅ PASO 2 - (Opcional, si es necesario descubrir valores)\n\n✅ PASO 3 - Query con nombres EXACTOS del schema:\nSELECT\nrow_data->>'COLUMNA_NOMBRE' as alias1,\n(row_data->>'COLUMNA_NUMERO')::numeric as alias2,\nrow_data->>'COLUMNA_ESTADO' as alias3\nFROM document_rows\nWHERE dataset_id = 'ABC123...'\nAND (row_data->>'COLUMNA_NUMERO')::numeric > [VALOR_DEL_USUARIO]\nORDER BY alias2 DESC;\n\n⚠️ IMPORTANTE:\n\n- Usar columnas DEL SCHEMA, no inventadas\n- Aplicar ::numeric si comparas números\n- Usar valores de LA PREGUNTA DEL USUARIO\n\n═══════════════════════════════════════════════════════════════════\n📋 EJEMPLO 2: CON DESCUBRIMIENTO\n═══════════════════════════════════════════════════════════════════\n\nUsuario: \"¿Cuántos [PRODUCTO] vendimos en [PERÍODO]?\"\nEjemplo real: \"¿Cuántos bolígrafos azules vendimos en diciembre?\"\n\n✅ PASO 1 - Schema:\nCall: List Documents(\"[palabra clave]\")\n\nResponse:\n{\n\"id\": \"XYZ789...\",\n\"title\": \"archivo.xlsx\",\n\"schema\": [\"PERIODO\", \"CODIGO\", \"ITEM\", \"CANTIDAD\", \"TOTAL\"]\n}\n\n✅ PASO 2 - Descubrir valor exacto del [PRODUCTO]:\nSELECT DISTINCT\nrow_data->>'ITEM' as item,\nrow_data->>'CODIGO' as codigo\nFROM document_rows\nWHERE dataset_id = 'XYZ789...'\nAND row_data->>'ITEM' ILIKE '%[palabra_clave_usuario]%'\nLIMIT 5;\n\nResultado encontrado:\n{\"ITEM\": \"[Nombre Exacto Encontrado]\", \"CODIGO\": \"ABC-001\"}\n\n✅ PASO 3 - Query exacta con valor del paso 2:\nSELECT\nrow_data->>'PERIODO' as periodo,\n(row_data->>'CANTIDAD')::numeric as cantidad,\n(row_data->>'TOTAL')::numeric as total\nFROM document_rows\nWHERE dataset_id = 'XYZ789...'\nAND row_data->>'CODIGO' = 'ABC-001'\nAND row_data->>'PERIODO' = '[Período_Usuario]';\n\n⚠️ REGLA:\n\n- PASO 2 usa ILIKE (flexible)\n- PASO 3 usa = (exacto)\n\n═══════════════════════════════════════════════════════════════════\n⚠️ SI SCHEMA ES NULL\n═══════════════════════════════════════════════════════════════════\n\nOpción 1 - Ver muestra:\nSELECT row_data FROM document_rows WHERE dataset_id = 'XXX' LIMIT 1;\n\nOpción 2 - Listar columnas:\nSELECT DISTINCT jsonb_object_keys(row_data) as columna\nFROM document_rows WHERE dataset_id = 'XXX';\n\n═══════════════════════════════════════════════════════════════════\n❌ ERRORES COMUNES\n═══════════════════════════════════════════════════════════════════\n\nERROR 1: Inventar nombres de columnas\n❌ row_data->>'NOMBRE_CLIENTE' (sin verificar schema)\n✅ Verificar schema primero, usar nombre exacto\n\nERROR 2: No usar sintaxis JSONB\n❌ SELECT CLIENTE FROM document_rows\n✅ SELECT row_data->>'CLIENTE' FROM document_rows\n\nERROR 3: Comparación de strings en números\n❌ WHERE row_data->>'PRECIO' > 1000\n✅ WHERE (row_data->>'PRECIO')::numeric > 1000\n\nERROR 4: LIKE en query final\n❌ WHERE row_data->>'SKU' LIKE '%BOL%' (paso 3)\n✅ WHERE row_data->>'SKU' = 'BOL-001' (paso 3)\n\nERROR 5: Omitir List Documents\n❌ Asumir dataset_id\n✅ Siempre llamar List Documents primero\n\n═══════════════════════════════════════════════════════════════════\n🚨 VALIDACIÓN DE RESULTADOS\n═══════════════════════════════════════════════════════════════════\n\nSi query devuelve [empty array]:\n\n1. ¿Llamaste a List Documents?\n2. ¿Usaste nombres exactos del schema?\n3. ¿El dataset_id es correcto?\n4. ¿Hiciste query de descubrimiento si era necesario?\n\nSi después de verificar todo sigue vacío:\n→ Los datos NO existen\n→ Informa honestamente\n→ Sugiere alternativas\n\n❌ NUNCA inventes datos\n✅ Di: \"No encontré datos de [X]. Los datos disponibles son...\"\n\n═══════════════════════════════════════════════════════════════════\n📋 FORMATO DE RESPUESTA\n═══════════════════════════════════════════════════════════════════\n\n✅ Sé directo y conciso\n✅ Usa tablas markdown para datos\n✅ Cita la fuente\n✅ Si no hay datos, dilo claramente\n\nEjemplo bueno:\n\"Clientes con pedidos > $5M:\n\n| Cliente | Monto | Estado |\n| --- | --- | --- |\n| Colegio San José | $8,500,000 | Pendiente |\n| Librería Central | $6,200,000 | Pendiente |\n\n**Fuente:** 09_pedidos_pendientes.csv\"\n\n═══════════════════════════════════════════════════════════════════\n🚨 CHECKLIST FINAL - ANTES DE CADA SQL\n═══════════════════════════════════════════════════════════════════\n\n□ ¿Llamé a List Documents?\n□ ¿Leí el schema?\n□ ¿Uso nombres exactos del schema?\n□ ¿Necesito descubrimiento? (si usuario menciona producto específico)\n□ ¿Uso sintaxis JSONB correcta?\n□ ¿Convierto tipos cuando es necesario?\n\nSi marcaste todas ✅ → Procede\nSi alguna es ❌ → DETENTE y corrígela\n\n═══════════════════════════════════════════════════════════════════\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        -528
+      ],
+      "id": "7b95ea03-78e7-4e1d-8310-67cd30928a95",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1024,
+        -320
+      ],
+      "id": "b8ad63ae-bd9f-4a3d-8b87-ad1e724189aa",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        -320
+      ],
+      "id": "5b297353-87da-4a7d-a855-dbc2975e2ddf",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "count": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Count', ``, 'number') }}",
+        "additionalParameters": {
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'boolean') }}"
+        }
+      },
+      "type": "@brave/n8n-nodes-brave-search.braveSearchTool",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        -320
+      ],
+      "id": "59379135-2569-4be5-b44c-58d4a3b303a9",
+      "name": "Brave Search",
+      "credentials": {
+        "braveSearchApi": {
+          "id": "o6NP3nOLF0mW2r6Y",
+          "name": "Brave Search account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flujo Principal\nEste flujo muestra la función principal del agente, donde se ingresa al chat y tenemos una consulta al RAG. El agente devuelve la consulta requerida por el humano luego de investigar en la WEB de ser necesario o su propia base documental.",
+        "height": 688,
+        "width": 1216,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1376,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "a66bc28c-1cf6-4806-9774-b7704c106265",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Enable the pgvector extension to work with embedding vectors\ncreate extension vector;\n\n-- Create a table to store your documents\ncreate table documents (\n  id bigserial primary key,\n  content text, -- corresponds to Document.pageContent\n  metadata jsonb, -- corresponds to Document.metadata\n  embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed\n);\n\n-- Create a function to search for documents\ncreate function match_documents (\n  query_embedding vector(1536),\n  match_count int default null,\n  filter jsonb DEFAULT '{}'\n) returns table (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nlanguage plpgsql\nas $$\n#variable_conflict use_column\nbegin\n  return query\n  select\n    id,\n    content,\n    metadata,\n    1 - (documents.embedding <=> query_embedding) as similarity\n  from documents\n  where metadata @> filter\n  order by documents.embedding <=> query_embedding\n  limit match_count;\nend;\n$$;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1232,
+        -992
+      ],
+      "id": "a7825a1d-03f9-4338-b13b-a9ae9751e5dd",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Creación de tablas\nSe hace en Supabase y se **ejecuta una sola vez**",
+        "height": 320,
+        "width": 1216
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1376,
+        -1104
+      ],
+      "typeVersion": 1,
+      "id": "a049d32f-afb3-4470-b8a2-b6a8e720003e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP",
+          "mode": "list",
+          "cachedResultName": "DOCUMENTOS RAG AGENTICO",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        208
+      ],
+      "id": "bed84909-be17-4358-aadf-97ea8ed25bd1",
+      "name": "creacion_archivo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AYNtUQeiPp34UO6Z",
+          "name": "Google Drive Nivanta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP",
+          "mode": "list",
+          "cachedResultName": "DOCUMENTOS RAG AGENTICO",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP"
+        },
+        "event": "fileUpdated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        384
+      ],
+      "id": "bdc78bd0-b15a-4b51-84c4-4db5188a979f",
+      "name": "actualizar_archivo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AYNtUQeiPp34UO6Z",
+          "name": "Google Drive Nivanta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -912,
+        208
+      ],
+      "id": "c8a92979-de61-4033-91ef-0c7f89a46366",
+      "name": "Loop Over Items",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        32
+      ],
+      "id": "afd0ba12-5a3c-4d65-9916-8f7cac50ca96",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "=09_pedidos_pendientes.csv",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP",
+            "mode": "list",
+            "cachedResultName": "DOCUMENTOS RAG AGENTICO",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/102gRz8eTA-z7IWGEEyZUu5jLYjp_OpYP"
+          }
+        },
+        "options": {
+          "fields": [
+            "mimeType",
+            "webViewLink",
+            "id",
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1136,
+        32
+      ],
+      "id": "d4263652-3021-4d0a-a750-1bfd6e8f2fc9",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AYNtUQeiPp34UO6Z",
+          "name": "Google Drive Nivanta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "980058bc-e9b0-4498-83c4-275268eb0b53",
+              "name": "file_id",
+              "value": "={{ $json.id.toString().replace(/\\s/g, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "6f3efae3-8550-49d9-a0c1-4880649c8b99",
+              "name": "file_type",
+              "value": "={{ $json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "22f837dd-b1a2-4876-aae6-ea3cc1378a3c",
+              "name": "file_title",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "04eef8c2-4297-4560-955a-af48183d3ab7",
+              "name": "file_url",
+              "value": "={{ $json.webViewLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        224
+      ],
+      "id": "33a965c3-987e-45d6-8ea3-abfefbc3fd0f",
+      "name": "set_file_id"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('set_file_id').item.json.file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        128,
+        80
+      ],
+      "id": "07d7272c-04e8-4d03-baeb-9b786d84c6a7",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AYNtUQeiPp34UO6Z",
+          "name": "Google Drive Nivanta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('set_file_id').item.json.file_type }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0bead426-6d5d-4f8a-972e-f2abd4648edf"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "af1b3106-93f4-4f9a-aaa7-9ba0001660d2",
+                    "leftValue": "={{ $('set_file_id').item.json.file_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b9289ab-816d-40d5-85a6-d5686c2087fe",
+                    "leftValue": "={{ $('set_file_id').item.json.file_type }}",
+                    "rightValue": "=text/csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "98321a77-f3ba-435f-83c1-ca3a8a6c6b25",
+                    "leftValue": "={{ $('set_file_id').item.json.file_type }}",
+                    "rightValue": "application/vnd.google-apps.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        304,
+        192
+      ],
+      "id": "11550a66-efda-4cd0-af21-96b680cfefab",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        208
+      ],
+      "id": "6d8b1e07-3f00-4e8d-98c4-05ae7172ba5a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        208
+      ],
+      "id": "5ce049a2-666b-4d4b-98e8-42a2a878d6df",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "embeddingBatchSize": 400,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1840,
+        240
+      ],
+      "id": "71306c50-aab9-45cd-b3f2-5824bd044469",
+      "name": "Insertar_documento_base_vectorial",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        480
+      ],
+      "id": "cc5b58cc-e690-49b8-a3eb-ea65b5b30e89",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data || $json.text || $json.concatenated_data }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "={{ $('set_file_id').item.json.file_id }}"
+              },
+              {
+                "name": "file_title",
+                "value": "={{ $('set_file_id').item.json.file_title }}"
+              },
+              {
+                "name": "file_url",
+                "value": "={{ $('set_file_id').item.json.file_url }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        480
+      ],
+      "id": "22f2f9da-1172-4ddb-b23a-06e8ecf8fd14",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 400,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        624
+      ],
+      "id": "10582ab8-fa6c-45f9-bd44-692e4dd9fbe4",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Determinar qué campo contiene el texto según el extractor\nlet textField = $input.item.json.data || \n                $input.item.json.text || \n                $input.item.json.concatenated_data;\n\nif (textField) {\n  let cleanText = textField\n    .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/g, '') // Remover caracteres de control\n    .replace(/\\\\n/g, '\\n') // Normalizar saltos de línea\n    .replace(/\\\\t/g, '\\t') // Normalizar tabs\n    .replace(/\\\\/g, '\\\\\\\\') // Escapar backslashes\n    .replace(/\"/g, '\\\\\"'); // Escapar comillas dobles\n  \n  // Actualizar el campo correspondiente\n  if ($input.item.json.data) $input.item.json.data = cleanText;\n  if ($input.item.json.text) $input.item.json.text = cleanText;\n  if ($input.item.json.concatenated_data) $input.item.json.concatenated_data = cleanText;\n}\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        240
+      ],
+      "id": "89aa2fa8-42c4-4e3a-9be7-fddb5babec68",
+      "name": "limpieza_caracteres"
+    },
+    {
+      "parameters": {
+        "content": "## Pipeline de alimentación de base de datos vectorial\n",
+        "height": 880,
+        "width": 3744,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1376,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "16ccd7fa-4a3f-4622-8499-a51729a0ae4e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=Use RAG to look up information in the knowledgebase.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        -320
+      ],
+      "id": "8f3ea29b-b7e9-4bd3-9108-2e9f1354f85e",
+      "name": "document_rag_tool",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        -192
+      ],
+      "id": "f9d11213-309e-4c65-b5c6-07615676e5f3",
+      "name": "Embeddings_OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE document_metadata (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    url TEXT,\n    created_at TIMESTAMP DEFAULT NOW(),\n    schema TEXT\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -976,
+        -992
+      ],
+      "id": "1d9ca0fc-c41d-48c9-ada6-89ff7d2097bd",
+      "name": "Creacion tabla Metadata Documentos",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE document_rows (\n    id SERIAL PRIMARY KEY,\n    dataset_id TEXT REFERENCES document_metadata(id),\n    row_data JSONB  -- Store the actual row data\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -720,
+        -992
+      ],
+      "id": "72bd8059-6ac6-49d1-8428-3000efa028da",
+      "name": "Creacion tabla Row Documentos"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filterType": "string",
+        "filterString": "=metadata->>'file_id=like.*{{ $json.file_id }}*"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        208
+      ],
+      "id": "192597e9-495f-4c03-816e-ab913f096cf9",
+      "name": "Delete Old Doc Rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "document_rows",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "dataset_id",
+              "condition": "eq",
+              "keyValue": "={{ $('set_file_id').item.json.file_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        64
+      ],
+      "id": "e0e65000-e158-4cbd-8a48-595cab14bf4b",
+      "name": "Delete a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_metadata",
+          "mode": "list",
+          "cachedResultName": "document_metadata"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "=  {{ $('set_file_id').item.json.file_id.normalize('NFC').replace(/[\\u200B-\\u200D\\uFEFF\\u0000-\\u001F\\u007F-\\u009F]/g, '').trim()}}",
+            "title": "={{ $('set_file_id').item.json.file_title }}",
+            "url": "=  {{ $('set_file_id').item.json.file_url }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "schema",
+              "displayName": "schema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "connectionTimeout": 180000
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        208
+      ],
+      "id": "d4ed5b63-5383-446a-adaa-e0130547a31c",
+      "name": "Insert Document Metadata",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        704,
+        32
+      ],
+      "id": "67cb61cb-e27e-482a-b1d0-0563b9b90ffd",
+      "name": "Extract PDF Text"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        704,
+        208
+      ],
+      "id": "9756b3ea-0bf5-4196-a507-9b8e052200e8",
+      "name": "Extract from Excel"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        704,
+        352
+      ],
+      "id": "691f4525-1a11-41bd-8e2e-e1f22657d142",
+      "name": "Extract from CSV"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        704,
+        544
+      ],
+      "id": "a293bb95-b345-42c7-8cba-570691cff461",
+      "name": "Extract Document Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bc576fb-eec5-4459-a06a-78cb9829e8b2",
+              "name": "schema",
+              "value": "={{$('set_file_id').item.json.file_type === 'text/csv'?\n$('Extract from CSV').first().json.keys().toJsonString():\n$('Extract from Excel').first().json.keys().toJsonString()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "eae5fa75-318e-41dd-801f-daafe69b5389",
+              "name": "data",
+              "value": "=  {{ $json.concatenated_data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        64
+      ],
+      "id": "a3ff1983-1fc2-4794-83f1-66d60eb91690",
+      "name": "Set Schema"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_metadata",
+          "mode": "list",
+          "cachedResultName": "document_metadata"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "=  {{ $('set_file_id').item.json.file_id }}",
+            "schema": "={{ $json.schema }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "schema",
+              "displayName": "schema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "connectionTimeout": 180000
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1744,
+        64
+      ],
+      "id": "4e42b468-e945-4b10-9fb6-566ca2f2862e",
+      "name": "Update Schema for Document Metadata",
+      "retryOnFail": true,
+      "executeOnce": false,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Buscar documentos disponibles - usa esto para encontrar qué archivos están disponibles en tu base de conocimiento y obtener sus metadatos.\n\nDEVUELVE:\n- dataset_id: ID único del archivo (úsalo en las queries SQL)\n- title: Nombre del archivo\n- file_type: Tipo (csv, xlsx, txt, pdf)\n- schema: Columnas disponibles (para archivos CSV/XLSX)\n\nCUÁNDO USAR:\n- Antes de hacer una query SQL, usa esto para encontrar el dataset_id correcto\n- Busca por palabras clave del nombre del archivo\n- Verifica el schema para saber qué columnas están disponibles\n\nEJEMPLO:\nUsuario pregunta: \"¿Quiénes son nuestros proveedores?\"\n1. Busca: \"proveedores\" o \"directorio\" \n2. Obtén el dataset_id del archivo encontrado (ej: \"abc-123\")\n3. Verifica el schema (columnas: NOMBRE_PROVEEDOR, CIUDAD, etc.)\n4. Genera la query SQL con ese dataset_id\n\nBÚSQUEDA INTELIGENTE:\n- \"proveedores\" → busca archivos con \"proveedor\", \"directorio_proveedores\"\n- \"inventario\" → busca \"inventario\", \"stock\"\n- \"ventas\" → busca \"ventas\", \"venta\"\n- \"clientes\" → busca \"clientes\", \"cliente\"\n\nSiempre verifica el schema antes de generar SQL para usar los nombres de columna correctos.",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_metadata",
+          "mode": "list",
+          "cachedResultName": "document_metadata"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -96,
+        -208
+      ],
+      "id": "0e523d47-8ad6-4ffd-8d4b-a5e1503c8aae",
+      "name": "List Documents",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Dado un ID de archivo, obtiene el texto del documento.",
+        "operation": "executeQuery",
+        "query": "SELECT \n    string_agg(content, ' ') as document_text\nFROM documents\n  WHERE metadata->>'file_id' = $1\nGROUP BY metadata->>'file_id';",
+        "options": {
+          "queryReplacement": "={{ $fromAI('file_id') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -304
+      ],
+      "id": "6ae6a24b-15ee-4a10-87fa-7430014965ad",
+      "name": "Get File Contents",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Ejecutar una consulta SQL - usa esto para consultar la tabla document_rows una vez que sepas el ID del archivo que estás consultando. \n\nESTRUCTURA DE LA TABLA:\n- dataset_id: TEXT (el ID único del archivo CSV/XLSX)\n- row_data: JSONB (contiene TODAS las columnas del archivo como un objeto JSON)\n\n⚠️ REGLA CRÍTICA:\nNUNCA accedas a columnas directamente. SIEMPRE usa la sintaxis JSONB: row_data->>'NOMBRE_COLUMNA'\n\nANTES DE HACER LA QUERY:\n1. Busca en document_metadata para obtener el dataset_id correcto\n2. Verifica el schema (nombres de columnas disponibles) en document_metadata\n3. Usa los nombres EXACTOS de las columnas que aparecen en el schema\n\nCONVERSIÓN DE TIPOS:\n- Texto: row_data->>'columna'\n- Números: (row_data->>'columna')::numeric\n- Fechas: (row_data->>'columna')::date\n- Booleanos: (row_data->>'columna')::boolean\n\nOPERADORES ÚTILES:\n- Búsqueda case-insensitive: WHERE row_data->>'columna' ILIKE '%texto%'\n- Comparación numérica: WHERE (row_data->>'precio')::numeric > 1000\n- Filtro de fecha: WHERE (row_data->>'fecha')::date >= '2024-01-01'\n- Verificar NULL: WHERE row_data->>'columna' IS NOT NULL\n\nEJEMPLOS PRÁCTICOS:\n\nEjemplo 1 - Promedio simple:\nSELECT AVG((row_data->>'revenue')::numeric) as promedio_ingresos\nFROM document_rows\nWHERE dataset_id = '123';\n\nEjemplo 2 - Agrupación con suma:\nSELECT\n  row_data->>'category' as categoria,\n  SUM((row_data->>'sales')::numeric) as ventas_totales,\n  COUNT(*) as cantidad_registros\nFROM document_rows\nWHERE dataset_id = '123'\nGROUP BY row_data->>'category'\nORDER BY ventas_totales DESC;\n\nEjemplo 3 - Filtros combinados:\nSELECT\n  row_data->>'PRODUCTO' as producto,\n  (row_data->>'STOCK_ACTUAL')::numeric as stock,\n  row_data->>'UBICACION' as ubicacion\nFROM document_rows\nWHERE dataset_id = '123'\n  AND (row_data->>'STOCK_ACTUAL')::numeric < (row_data->>'STOCK_MINIMO')::numeric\n  AND row_data->>'CATEGORIA' = 'Escritura';\n\nEjemplo 4 - Búsqueda de texto:\nSELECT\n  row_data->>'NOMBRE_CLIENTE' as cliente,\n  row_data->>'EMAIL' as email,\n  (row_data->>'TOTAL_COMPRAS_2024')::numeric as compras\nFROM document_rows\nWHERE dataset_id = '123'\n  AND row_data->>'NOMBRE_CLIENTE' ILIKE '%colegio%'\nORDER BY compras DESC\nLIMIT 10;\n\nEjemplo 5 - Joins entre archivos (usando subqueries):\nSELECT\n  inv.row_data->>'PRODUCTO' as producto,\n  (inv.row_data->>'STOCK_ACTUAL')::numeric as stock,\n  COALESCE(SUM((ventas.row_data->>'CANTIDAD_VENDIDA')::numeric), 0) as total_vendido\nFROM document_rows inv\nLEFT JOIN document_rows ventas \n  ON inv.row_data->>'SKU' = ventas.row_data->>'SKU'\n  AND ventas.dataset_id = '456'\nWHERE inv.dataset_id = '123'\nGROUP BY inv.row_data->>'PRODUCTO', inv.row_data->>'STOCK_ACTUAL';\n\nEjemplo 6 - Análisis temporal:\nSELECT\n  row_data->>'MES' as mes,\n  (row_data->>'VENTAS_TOTALES')::numeric as ventas,\n  (row_data->>'NUEVOS_CLIENTES')::numeric as clientes,\n  ROUND((row_data->>'MARGEN_BRUTO')::numeric, 2) as margen\nFROM document_rows\nWHERE dataset_id = '123'\n  AND (row_data->>'VENTAS_TOTALES')::numeric > 100000000\nORDER BY (row_data->>'VENTAS_TOTALES')::numeric DESC;\n\nERRORES COMUNES A EVITAR:\n❌ SELECT NOMBRE_PRODUCTO FROM document_rows  (No funciona)\n✅ SELECT row_data->>'NOMBRE_PRODUCTO' FROM document_rows\n\n❌ WHERE PRECIO > 1000  (No funciona)\n✅ WHERE (row_data->>'PRECIO')::numeric > 1000\n\n❌ WHERE dataset_id = 'inventario.csv'  (Usar el ID, no el nombre)\n✅ WHERE dataset_id = 'abc-123-def-456'  (ID correcto de document_metadata)\n\nTIPS:\n- Siempre incluye LIMIT si no estás seguro del tamaño del resultado\n- Usa aliases (AS) para hacer las columnas más legibles\n- Para debugging, primero haz SELECT * FROM document_rows WHERE dataset_id = '123' LIMIT 5\n- Si la query falla, verifica que los nombres de columnas sean exactos (case-sensitive)\n```\n\n---\n\n### 🎯 **Mejoras clave de esta descripción:**\n\n1. **Sección \"ANTES DE HACER LA QUERY\"**: Recuerda al agente verificar el schema primero\n\n2. **Tabla de conversión de tipos**: Referencia rápida para casting\n\n3. **Operadores útiles**: ILIKE, comparaciones, NULL checks\n\n4. **6 ejemplos prácticos** en lugar de 2:\n   - Ejemplo 3: Filtros combinados\n   - Ejemplo 4: Búsqueda de texto\n   - Ejemplo 5: Joins entre archivos\n   - Ejemplo 6: Análisis temporal\n\n5. **Sección de errores comunes**: Muestra qué NO hacer y la forma correcta\n\n6. **Tips prácticos**: Para debugging y mejores resultados\n\n7. **Formato más visual**: Usa ⚠️ y ❌✅ para destacar lo importante\n\n### 💡 **Alternativa más corta** (si prefieres algo más conciso):\n```\nEjecutar consulta SQL en tabla document_rows. dataset_id es el ID del archivo, row_data es JSONB con todas las columnas.\n\n⚠️ SIEMPRE usa: row_data->>'COLUMNA' (nunca accedas columnas directamente)\n\nPASOS:\n1. Busca en document_metadata el dataset_id y schema del archivo\n2. Genera query usando sintaxis JSONB\n\nCASTING:\n- Texto: row_data->>'col'\n- Número: (row_data->>'col')::numeric  \n- Fecha: (row_data->>'col')::date\n\nEJEMPLOS:\n-- Promedio\nSELECT AVG((row_data->>'revenue')::numeric) FROM document_rows WHERE dataset_id='123';\n\n-- Agrupación\nSELECT row_data->>'category' as cat, SUM((row_data->>'sales')::numeric) as total\nFROM document_rows WHERE dataset_id='123' GROUP BY row_data->>'category';\n\n-- Filtros\nSELECT row_data->>'producto', (row_data->>'stock')::numeric\nFROM document_rows \nWHERE dataset_id='123' \n  AND (row_data->>'stock')::numeric < 100\n  AND row_data->>'categoria' ILIKE '%escritura%';\n\n❌ NO: SELECT COLUMNA FROM...\n✅ SÍ: SELECT row_data->>'COLUMNA' FROM...",
+        "operation": "executeQuery",
+        "query": "{{ $fromAI('sql_query') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        64,
+        -208
+      ],
+      "id": "d303b289-96d3-4234-9965-f6dd824e0cd8",
+      "name": "Query Document Rows",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Herramientas de agente - RAG Agéntico\n",
+        "height": 336,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "eec494dd-44dd-4699-8eeb-776de6e213f8",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_rows",
+          "mode": "list",
+          "cachedResultName": "document_rows"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "dataset_id": "={{ $('Insert Document Metadata').item.json.id }}",
+            "row_data": "={{ $json.toJsonString().replaceAll(/'/g, \"''\") }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "dataset_id",
+              "displayName": "dataset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_data",
+              "displayName": "row_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1040,
+        352
+      ],
+      "id": "36eb1d1d-7f79-409f-8218-2ce383bbc25c",
+      "name": "Insert Table Rows",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n  // Limpiar file_id\n  if (item.json.file_id && typeof item.json.file_id === 'string') {\n    const original = item.json.file_id;\n    item.json.file_id = item.json.file_id.replace(/\\s/g, '');\n    \n    if (original !== item.json.file_id) {\n      console.log(`✅ N8N: Limpiado file_id de longitud ${original.length} a ${item.json.file_id.length}`);\n    }\n  }\n  \n  // Limpiar otros campos por si acaso\n  ['id', 'dataset_id'].forEach(field => {\n    if (item.json[field] && typeof item.json[field] === 'string') {\n      item.json[field] = item.json[field].replace(/\\s/g, '');\n    }\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        80
+      ],
+      "id": "db6ea8b1-afce-48ae-849d-b7a43849690d",
+      "name": "Limpiar_Ids"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Create a table to store your documents\ncreate table memories (\n  id bigserial primary key,\n  content text, -- corresponds to Document.pageContent\n  metadata jsonb, -- corresponds to Document.metadata\n  embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed\n);\n\n-- Create a function to search for documents\ncreate function match_memories (\n  query_embedding vector(1536),\n  match_count int default null,\n  filter jsonb DEFAULT '{}'\n) returns table (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nlanguage plpgsql\nas $$\n#variable_conflict use_column\nbegin\n  return query\n  select\n    id,\n    content,\n    metadata,\n    1 - (memories.embedding <=> query_embedding) as similarity\n  from memories\n  where metadata @> filter\n  order by memories.embedding <=> query_embedding\n  limit match_count;\nend;\n$$;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -480,
+        -992
+      ],
+      "id": "c4699129-8a3b-4a3a-8c29-bf441b57a215",
+      "name": "Create Memories Table and Match Function",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7c945d20-ae73-4ebd-885b-4464cee4850d",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1296,
+        -352
+      ],
+      "id": "59212d28-142d-48e1-8425-84a421b4ceac",
+      "name": "Webhook",
+      "webhookId": "7c945d20-ae73-4ebd-885b-4464cee4850d"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "memories",
+        "toolDescription": "=Usa esta herramienta para recuperar recuerdos de conversaciones anteriores.",
+        "tableName": {
+          "__rl": true,
+          "value": "memories",
+          "mode": "list",
+          "cachedResultName": "memories"
+        },
+        "options": {
+          "queryName": "match_memories"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -320
+      ],
+      "id": "02f3a361-de66-4edf-a21d-16eca2fc10a4",
+      "name": "Retrieve Memories Tool",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -416,
+        -192
+      ],
+      "id": "b47ab259-0036-473a-b62e-52680e026998",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        -528
+      ],
+      "id": "315336c2-a9f2-4e36-97d8-eb6428dc573e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un experto en extraer información clave de las conversaciones para almacenarla como memorias a largo plazo para RAG.\n\nEl usuario dijo:\n{{ $('mensaje_de_entrada').item.json.mensaje }}\n\nTu objetivo es generar una lista de memorias clave para extraer de la conversación.\n\nSimplemente devuelve una lista vacía si no hay nada que valga la pena guardar, como cuando el usuario solo hace una pregunta básica sin proporcionar contexto adicional.\n",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -128,
+        -672
+      ],
+      "id": "8f53f0a8-e106-4f0e-9c44-a28fc0650cb3",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        -528
+      ],
+      "id": "417cd9bc-4c06-4cfe-899e-adbbdf44ec68",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"memories\": [\"Memory 1\", \"Memory 2\", \"Memory 3\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        -528
+      ],
+      "id": "dab1e50d-3fe0-4158-a8a3-5942a4091c3b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cb436122-f430-4ea5-98d8-b99e8c52eeaa",
+              "leftValue": "={{ $json.output.memories }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -672
+      ],
+      "id": "55b4d8f5-4f64-4332-b8bc-68e390c2f0a5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un experto en mantener una base de datos de memorias para un usuario, asegurándote de que no existan memorias duplicadas o contradictorias.\n\nLas memorias actuales que se están agregando a la base de datos son:\n\n{{ $json.output.memories }}\n\nTu tarea es:\n- Buscar en la base de datos de memorias para encontrar cualquier memoria duplicada o contradictoria. La herramienta devolverá memorias de la búsqueda, pero tú debes decidir si son duplicadas o contradictorias respecto a las memorias que se están agregando o no.\n- Si encuentras memorias duplicadas/contradictorias, devuelve una lista de memorias a eliminar (el contenido de la memoria). De lo contrario, si no encuentras memorias para eliminar, devuelve una lista vacía. Debes determinar, basándote en todas las memorias devueltas por la búsqueda, si son duplicadas/contradictorias. Las memorias que devuelvas deben coincidir EXACTAMENTE con el contenido recibido.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        480,
+        -672
+      ],
+      "id": "29b4b249-e272-4646-82c6-fbb64006692b",
+      "name": "Memory Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -192
+      ],
+      "id": "63414f8b-9e26-4625-97cc-292d4b377f70",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "memories",
+        "toolDescription": "=Usa esta herramienta para recuperar memorias de la base de datos. En particular, debes usarla para encontrar memorias similares a las que planeas agregar, de modo que puedas hacer lo necesario para eliminar duplicados.",
+        "tableName": {
+          "__rl": true,
+          "value": "memories",
+          "mode": "list",
+          "cachedResultName": "memories"
+        },
+        "topK": 8,
+        "options": {
+          "queryName": "match_memories"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -336
+      ],
+      "id": "5beb75d1-8ddb-49fc-8a85-08de561d36b3",
+      "name": "Similar Memory Searcher",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -208
+      ],
+      "id": "eb729056-4350-4689-9693-09739d35bcee",
+      "name": "Embeddings OpenAI4",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Buscador de Memoria",
+        "height": 336,
+        "width": 496,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "ab6bfe5e-8c8a-4665-9600-a8da5685bfdb",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\"Memory 1\", \"Memory 2\", \"Memory 3\"]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        -544
+      ],
+      "id": "e0a6d65b-7f3e-447f-ae48-b3b085e09d08",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM memories\nWHERE content IN ({{ $json.output.concat($('Basic LLM Chain').item.json.output.memories).map(item => `'${item.replace(/'/g, \"''\")}'`).join(', ') || '__IMPOSSIBLE_VALUE__' }})",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        864,
+        -672
+      ],
+      "id": "988a074d-1eee-417c-8250-658632d54846",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "zKx3rcTnA4rw2FR6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "memories",
+          "mode": "list",
+          "cachedResultName": "memories"
+        },
+        "options": {
+          "queryName": "match_memories"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -672
+      ],
+      "id": "91af426e-1ab8-4269-a57e-ca6f1849c260",
+      "name": "Supabase Vector Store",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Xdni9obAfa1tIs93",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        -208
+      ],
+      "id": "1639ce86-3669-4699-b8a3-67f17aa4bdc1",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $('Basic LLM Chain').item.json.output.memories }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "timestamp",
+                "value": "={{ $now }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        -336
+      ],
+      "id": "3e48262a-cc2f-424d-b35e-f01c76fd4a66",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "chunkSize": 400
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -208
+      ],
+      "id": "c81a8f72-8a7e-424b-a55b-4c8e9b6826f7",
+      "name": "Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "content": "## Chunking & Embedding",
+        "height": 336,
+        "width": 560,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        960,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "997ab169-569e-45f1-a61a-42e2b2b78083",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "636ddfda-13fd-4f21-ad30-fa21472ed9e7",
+              "name": "output",
+              "value": "={{ $('AI Agent').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        -560
+      ],
+      "id": "b2eb3de0-ef05-4f7a-9e76-6dc5c2520313",
+      "name": "Edit Fields1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "## Guardado de memoria de largo plazo",
+        "height": 336,
+        "width": 1664,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "92187b18-956a-433c-b062-1d994dc328fc",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "name": "execute_code",
+        "description": "Llama a esta herramienta para ejecutar código JavaScript que tú mismo crees con los parámetros que también especifiques. Todo el código debe estar en una sola línea y debe ser código JavaScript.",
+        "jsCode": "/**\n * Execute arbitrary JavaScript code and capture its console output\n * @param {string} codeString - JavaScript code to execute\n * @returns {string} The captured console output\n */\nfunction executeCode(codeString) {\n  // Save the original console.log function\n  const originalLog = console.log;\n  \n  // Create an array to store the output\n  const outputLines = [];\n  \n  // Override console.log to capture output\n  console.log = function(...args) {\n    // Convert all arguments to strings and join them\n    const output = args.map(arg => \n      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)\n    ).join(' ');\n    \n    // Add to our captured output\n    outputLines.push(output);\n  };\n  \n  // Variable to store the result\n  let result;\n  \n  try {\n    // Execute the code\n    result = eval(codeString);\n  } catch (error) {\n    // Restore the original console.log\n    console.log = originalLog;\n    return `Error executing code: ${error.message}`;\n  } finally {\n    // Restore the original console.log\n    console.log = originalLog;\n  }\n  \n  // Join all captured output lines\n  const output = outputLines.join('\\n');\n  \n  // If there's a result but no console output, return the result\n  if (output === '' && result !== undefined) {\n    return String(result);\n  }\n  \n  return output;\n}\n\nreturn executeCode(query.code_to_execute);",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"code_to_execute\": \"console.log('test')\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        -192
+      ],
+      "id": "5a2168a5-c24d-4c91-8dd7-9d3125242a9a",
+      "name": "Code Tool"
+    },
+    {
+      "parameters": {
+        "name": "image_analysis",
+        "description": "Llama a esta herramienta para analizar una imagen basada en una URL de imagen que proporciones como image_url. La URL de la imagen debe ser una URL de una imagen en Google Drive. Además, proporciona query, que es la instrucción para el LLM con el fin de extraer información de la imagen.\n\nUsa la herramienta list_documents para obtener la URL de la imagen.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "={{ $workflow.id }}",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', ``, 'string') }}",
+            "tool_type": "image_analysis",
+            "image_url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('image_url', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tool_type",
+              "displayName": "tool_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        -192
+      ],
+      "id": "dce48000-d918-44c9-9bbd-1589ab836d84",
+      "name": "Image Analysis Tool"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "tool_type"
+            },
+            {
+              "name": "query"
+            },
+            {
+              "name": "image_url"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        -976
+      ],
+      "id": "822a23ca-3e39-4adb-a91a-60dac6d96443",
+      "name": "Tool Start"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.image_url }}",
+          "mode": "url"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain",
+              "drawingsToFormat": "image/png"
+            }
+          }
+        }
+      },
+      "id": "504a4608-7ecf-48ed-9226-f1b89fc8a18c",
+      "name": "Download File1",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        -976
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AYNtUQeiPp34UO6Z",
+          "name": "Google Drive Nivanta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "={{ $('Tool Start').item.json.query }}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        480,
+        -976
+      ],
+      "id": "8f4d2443-be13-48c1-ba92-65116bb87eb8",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "THe2m3WwaZKGYj6Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Flujo de tools del AI Agent",
+        "height": 320,
+        "width": 864,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        -1104
+      ],
+      "typeVersion": 1,
+      "id": "1f5fb305-f680-4b73-a570-5ee9e5822008",
+      "name": "Sticky Note7"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "chat_de_entrada": {
+      "main": [
+        [
+          {
+            "node": "mensaje_de_entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensaje_de_entrada": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "actualizar_archivo": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "set_file_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "creacion_archivo": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_file_id": {
+      "main": [
+        [
+          {
+            "node": "Limpiar_Ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from Excel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "limpieza_caracteres",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar_documento_base_vectorial": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insertar_documento_base_vectorial",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insertar_documento_base_vectorial",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "limpieza_caracteres": {
+      "main": [
+        [
+          {
+            "node": "Insertar_documento_base_vectorial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "document_rag_tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings_OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "document_rag_tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Doc Rows": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "Insert Document Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Document Metadata": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "limpieza_caracteres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from Excel": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Table Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from CSV": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Table Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Text": {
+      "main": [
+        [
+          {
+            "node": "limpieza_caracteres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Schema": {
+      "main": [
+        [
+          {
+            "node": "Update Schema for Document Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Contents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Document Rows": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar_Ids": {
+      "main": [
+        [
+          {
+            "node": "Delete Old Doc Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "mensaje_de_entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Memories Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retrieve Memories Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Memory Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Memory Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Similar Memory Searcher": {
+      "ai_tool": [
+        [
+          {
+            "node": "Memory Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Similar Memory Searcher",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Memory Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory Agent": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Analysis Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Start": {
+      "main": [
+        [
+          {
+            "node": "Download File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f99700bb-5f83-4746-abeb-a074938484e6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9be3df888f2ddb5a56cc8a2212c1aeffdfc9044cd1ff9104742220f21a9d964d"
+  },
+  "id": "ATIW9JR92dO5E4hH",
+  "tags": [
+    {
+      "createdAt": "2025-09-27T20:44:28.568Z",
+      "updatedAt": "2025-09-27T20:44:28.568Z",
+      "id": "b3q3DhInbIgNOfXV",
+      "name": "Training"
+    }
+  ]
+}
